@@ -36,8 +36,9 @@ namespace CheckpointTwo
                 if (cki.Key == ConsoleKey.Enter || cki.Key == ConsoleKey.N)
                 {
                     Util.ClearConsole();
-                    List<Product> producs = Util.AddProduct(productList);
+                    productList.AddRange(Util.AddProduct());
                 }
+                
 
                 // Show Product Table 
                 if (cki.Key == ConsoleKey.L)

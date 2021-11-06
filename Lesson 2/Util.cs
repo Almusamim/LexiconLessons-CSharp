@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection;
 
 namespace CheckpointTwo
 {
@@ -20,11 +21,7 @@ namespace CheckpointTwo
             PrintTxt("'Enter' to add a new product", "Green");
             PrintTxt("||");
             PrintTxt("'Esc' to exit:", "Red");
-            //PrintTxt("to exit:");
-
             Console.WriteLine("\n");
-            Console.ResetColor();
-
         }
 
         public static void ClearConsole()
@@ -100,78 +97,71 @@ namespace CheckpointTwo
             Console.ResetColor();
         }
 
-        public static List<Product> AddProduct(List<Product> productList)
+        public static List<Product> AddProduct()
         {
-            Product productObj = new();
+            List<Product> list = new List<Product>();
+            Product productInstance = new();
+            Product p = productInstance;
 
-            string[] properties = { "Name", "Category", "Price" };
-            foreach (string prop in properties)
+            Type productType = typeof(Product);
+            var properties = productType.GetProperties(); // System.Reflection.PropertyInfo
+
+            foreach (var prop in properties)
             {
-                // Quit the loop when user input for each property is validated
-                while (true)
+                while(true)
                 {
                     try
                     {
-                        PrintTxt($"Add {prop}: ");
+                        PrintTxt($"Add {prop.Name}: ");
                         string userInput = Console.ReadLine();
 
-                        // Parse price into decimal
-                        decimal decimalValue;
-                        bool isDecimal = decimal.TryParse(userInput, out decimalValue);
-                        decimalValue = isDecimal ? decimalValue : decimalValue;
+                        PropertyInfo propertyInfo = productType.GetProperty(prop.Name);
+                        dynamic dynamicValue = Convert.ChangeType(userInput, propertyInfo.PropertyType);
 
-                        // Validating property
-                        bool isValid = ValidaterProperty(userInput, prop, productObj, decimalValue);
+                        bool isValid = ValidaterProperty(dynamicValue, prop.Name, productInstance);
                         if (isValid)
                         {
-                            // Set value for each property, Note: some improvements needed here to make it more dynamic
-                            switch (prop)
-                            {
-                                case "Name": productObj.Name = userInput; break;
-                                case "Category": productObj.Category = userInput; break;
-                                case "Price": productObj.Price = decimalValue; break;
-                            }
-
-                            // If succesful break the while loop
+                            prop.SetValue(productInstance, dynamicValue);
                             break;
                         }
+                        break;
                     }
                     catch (ValidationException ex)
                     {
                         PrintTxt($"\n - {ex.Message}\n\n", "Red");
                     }
+                    catch (Exception e)
+                    {
+                        PrintTxt($"\n - {e.Message}\n\n", "DarkRed");
+                    }
                 }
             }
-            productList.Add(new Product(productObj.Name, productObj.Category, productObj.Price));
-            PrintTxt($"\n  - Product '{productObj.Name}' successfully added.\n\n", "Green");
+
+            list.Add(productInstance);
+
+            PrintTxt($"\n  - Product '{p.Name}' was successfully added.\n\n", "Green");
             PrintTxt($"- Press the 'L' key to view the product list.\n\n", "Yellow");
             PrintTxt($"- Or", "Yellow"); PrintTxt($"'Enter'", "Green"); PrintTxt($"to add another product.", "Yellow");
-
-            return productList;
+            return list;
         }
 
-        // Validating DataAnnotations by each property.
-        // Note: Some improvement to make the 'value' param work with different data types to clean the code further more from all conditions and params.
-        public static bool ValidaterProperty(string value, string propertyName, object obj, decimal decimalValue)
+        public static bool ValidaterProperty<T>(T value, string propertyName, object obj)
         {
             var context = new ValidationContext(obj) { MemberName = propertyName };
             var results = new List<ValidationResult>();
-
-            bool valid = (propertyName != "Price") ?
-                Validator.TryValidateProperty(value, context, results) :
-                Validator.TryValidateProperty(decimalValue, context, results);
+            bool valid = Validator.TryValidateProperty(value, context, results);
 
             if (!valid)
             {
-                // Throw all errors
                 foreach (var error in results)
                 {
-                    throw new ValidationException($"{error}");
+                    throw new ValidationException(error.ErrorMessage);
                 }
                 return false;
             }
             return true;
         }
+
 
         public static void DemoData(List<Product> productList)
         {
