@@ -3,6 +3,8 @@
  **[Lesson #3](https://github.com/LexiconLessons/C-Sharp-Lessons/tree/main/Lesson%203)** \
 <sup>[Download release file](https://github.com/LexiconLessons/C-Sharp-Lessons/raw/main/Release/Lesson%203/MiniProjectOne.zip)<sup> 
   
+ ---- 
+  
 ![Screen Shot: Lesson 2](https://github.com/LexiconLessons/C-Sharp-Lessons/raw/main/Release/Lesson%202/lesson-2.jpg)
   
 **[Lesson #2](https://github.com/LexiconLessons/C-Sharp-Lessons/tree/main/Lesson%202)** \
