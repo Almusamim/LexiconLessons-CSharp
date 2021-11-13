@@ -1,11 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 
 namespace MiniProjectOne
 {
-    class Product
+    class Product : Category
     {
-        public Product(string office, string brand, string model, decimal price, DateTime purchaseDate)
+        public Product(string categoryName, string office, string brand, string model, decimal price, DateTime purchaseDate) : base(categoryName)
         {
             Office = office ?? throw new ArgumentNullException(nameof(office));
             Brand = brand ?? throw new ArgumentNullException(nameof(brand));
@@ -19,6 +20,7 @@ namespace MiniProjectOne
         }
 
         [Required]
+        [Display(Order = -2)]
         public string Office { get; set; }
 
         [Required]
@@ -33,11 +35,41 @@ namespace MiniProjectOne
         public decimal Price { get; set; }
 
         [Required]
+        [Display(Name = "Purchase Date", Order = 3)]
         public DateTime PurchaseDate { get; set; }
 
-        public virtual string ProductType()
+        public (string price, DateTime latestUpdate) CurrencyConvert()
         {
-            return "Product";
+            var (MYR, SEK, latestUpdate) = Client.Rates();
+
+            string price;
+            switch (Office)
+            {
+                case "Malmö": price = (Price * SEK).ToString("C", CultureInfo.GetCultureInfo("sv-SE"));
+                    break;
+                case "Kuala Lumpur": price = (Price * MYR).ToString("C", CultureInfo.GetCultureInfo("en-MY"));
+                    break;
+                default: price = Price.ToString("C", CultureInfo.GetCultureInfo("en-US"));
+                    break;
+            }
+
+            return (price, latestUpdate);
+        }
+
+        public void SetColorForOld()
+        {
+            DateTime now = DateTime.Now;
+            DateTime thirtyThreeMonthsBack = now.AddMonths(-33);
+            DateTime thirtyMonthsBack = now.AddMonths(-30);
+
+            if (thirtyMonthsBack > PurchaseDate)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+            }
+            if (thirtyThreeMonthsBack > PurchaseDate)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+            }
         }
     }
 }
